@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<!-- IAMNOTLOGINSTRINGPLEASEDONTREMOVE -->
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/toast.min.css">
+    <title>JuanFi Login Portal</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/md5.js"></script>
+    <script src="assets/js/pako.min.js"></script>
+    <script src="assets/js/qrcode.min.js"></script>
+    
+<style>
+/* New styles from example.html adapted for login.html */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #d6dadd 0%, #d2d6d9 50%, #cfd7df 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-x: hidden;
+    color: #2c3e50;
+}
+
+.portal-container {
+    background: linear-gradient(145deg, #ecf0f1, #bdc3c7);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 
+        20px 20px 60px #253342,
+        -20px -20px 60px #415d78;
+    max-width: 500px;
+    width: 90%;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+}
+
+.portal-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #3498db, #2ecc71, #f39c12, #e74c3c);
+    animation: pulse 2s infinite;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.wifi-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 20px;
+    background: linear-gradient(145deg, #ecf0f1, #bdc3c7);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 
+        inset 8px 8px 16px #95a5a6,
+        inset -8px -8px 16px #ffffff;
+    position: relative;
+}
+
+.wifi-signal {
+    width: 40px;
+    height: 40px;
+    position: relative;
+}
+
+.wifi-signal::before,
+.wifi-signal::after {
+    content: '';
+    position: absolute;
+    border: 3px solid #34495e;
+    border-radius: 50%;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+}
+
+.wifi-signal::before {
+    width: 30px;
+    height: 15px;
+    bottom: 0;
+    left: 5px;
+    animation: signal1 1.5s infinite;
+}
+
+.wifi-signal::after {
+    width: 20px;
+    height: 10px;
+    bottom: 0;
+    left: 10px;
+    animation: signal2 1.5s infinite 0.3s;
+}
+
+.portal-title {
+    font-size: 28px;
+    font-weight: bold;
+    color: #2c3e50;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 10px;
+}
+
+.portal-subtitle {
+    color: #7f8c8d;
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+.status-display {
+    background: linear-gradient(145deg, #95a5a6, #7f8c8d);
+    color: #ecf0f1;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    box-shadow: inset 3px 3px 8px rgba(0,0,0,0.3);
+    position: relative;
+    font-size: 12px;
+}
+
+.status-display .info-ip, .status-display .info-mac {
+    display: inline-block;
+    margin: 0 10px;
+}
+
+.status-display img {
+    vertical-align: middle;
+    margin-right: 5px;
+}
+
+.status-display::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 8px;
+    height: 8px;
+    background: #e74c3c;
+    border-radius: 50%;
+    animation: blink 1s infinite;
+}
+
+.blinking1 {
+    animation: blink 1.5s infinite;
+    color: #e74c3c;
+}
+
+.action-btn {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: linear-gradient(145deg, #ecf0f1, #bdc3c7);
+    color: #2c3e50;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 
+        5px 5px 10px #95a5a6,
+        -5px -5px 10px #ffffff;
+    text-shadow: 1px 1px 2px rgba(255,255,255,0.7);
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+        8px 8px 15px #95a5a6,
+        -8px -8px 15px #ffffff;
+}
+
+.action-btn.primary {
+    background: linear-gradient(145deg, #3498db, #2980b9);
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.action-btn.success {
+    background: linear-gradient(145deg, #2ecc71, #27ae60);
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.action-btn.warning {
+    background: linear-gradient(145deg, #f39c12, #e67e22);
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+#voucherInput {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(145deg, #ecf0f1, #bdc3c7);
+    box-shadow: inset 5px 5px 10px #95a5a6,
+                inset -5px -5px 10px #ffffff;
+    font-size: 16px;
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+#voucherInput::placeholder {
+    color: #7f8c8d;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-text {
+    color: #7f8c8d !important;
+}
+
+.footer {
+    margin-top: 30px;
+    font-size: 12px;
+    color: #7f8c8d;
+}
+
+.footer a {
+    color: #34495e;
+    text-decoration: none;
+}
+
+.footer a:hover {
+    text-decoration: underline;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+@keyframes signal1 {
+    0%, 100% { border-color: #34495e; }
+    50% { border-color: #3498db; }
+}
+
+@keyframes signal2 {
+    0%, 100% { border-color: #34495e; }
+    50% { border-color: #2ecc71; }
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+@media (max-width: 600px) {
+    .portal-container {
+        padding: 20px;
+        margin: 20px;
+    }
+    .portal-title {
+        font-size: 24px;
+    }
+    .time-options {
+                grid-template-columns: 1fr;
+            }
+}
+
+.time-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .time-option {
+            background: linear-gradient(145deg, #ecf0f1, #bdc3c7);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 
+                5px 5px 10px #95a5a6,
+                -5px -5px 10px #ffffff;
+        }
+
+        .time-option:hover,
+        .time-option.selected {
+            border-color: #3498db;
+            background: linear-gradient(145deg, #3498db, #2980b9);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .time-option .duration {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .time-option .price {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .spinner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+</style>
+</head>
+
+<body>
+
+    $(if chap-id)
+    <form name="sendin" action="$(link-login-only)" method="post" style="display:none">
+        <input type="hidden" name="username" />
+        <input type="hidden" name="password" />
+        <input type="hidden" name="dst" value="$(link-orig)" />
+        <input type="hidden" name="popup" value="true" />
+    </form>
+
+    <script>
+        var mac = "$(mac)";
+        var uIp = "$(ip)";
+        var ImOnLogin = "1";
+        var ImOnStatus = "0";
+        var alertVoucher = "0";
+        var loginError = "";
+
+        function doLogin() {
+            var vc = $("#voucherInput").val();
+            if( macAsVoucherCode && vc == "" ){
+                var macNoColon = replaceAll(mac, ":");
+                $("#voucherInput").val(macNoColon);
+            }
+            setStorageValue("activeVoucher", vc);
+            var validity = getStorageValue(vc+"validity");
+            var tempValidity = getStorageValue(vc+"tempValidity");
+            if(tempValidity != null){
+                var currentExpireDate = new Date();
+                if(validity != null){
+                    currentExpireDate = new Date(parseInt(validity));
+                }
+                var minutes = parseInt(tempValidity);
+                var expireDate = new Date(currentExpireDate.getTime() + minutes*60000);
+                
+                var currentDate = new Date();
+                if(expireDate.getTime() < currentDate.getTime()){
+                    removeStorageValue(vc+"validity");
+                    removeStorageValue(vc+"tempValidity");
+                }else{
+                    setStorageValue(vc+"validity", expireDate.getTime()+"");
+                    removeStorageValue(vc+"tempValidity");
+                }
+                
+            }
+            document.sendin.username.value = vc;
+            if(loginOption == 0){
+                document.sendin.password.value = hexMD5('$(chap-id)' + "" + '$(chap-challenge)');
+            }else{
+                document.sendin.password.value = hexMD5('$(chap-id)' + vc + '$(chap-challenge)');
+            }
+            document.sendin.submit();
+            return false;
+        }
+    </script>
+    
+    <script type="text/javascript" src="assets/js/md5.js"></script>
+    <script type="text/javascript">
+    <!--
+        function doLoginMember() {
+        document.sendin.username.value = document.login.username.value;
+        document.sendin.password.value = hexMD5('$(chap-id)' + document.login.password.value + '$(chap-challenge)');
+        document.sendin.submit();
+        return false;
+        }
+    //-->
+    </script>
+    $(endif)
+
+    $(if error)
+    <script>
+        loginError = "$(error)";
+    </script>
+    $(endif)
+
+    <div class="portal-container">
+        
+
+        <div class="header">
+            <div class="wifi-icon">
+                <div class="wifi-signal"></div>
+            </div>
+            <h1 class="portal-title">PISO WIFI</h1>
+            <p class="portal-subtitle">Premium Internet Access</p>
+        </div>
+
+        <div class="status-display">
+            <div><span class="status-disconnected">Status: <span class="blinking1">Disconnected</span></span></div>
+            <div style="margin-top: 5px; opacity: 0.8;">
+                <div class="info-ip">
+                    <img src="assets/img/ip.png" width="16px" height="16px" />
+                    <span>$(ip)</span>
+                </div>
+                <div class="info-mac">
+                    <img src="assets/img/mac.png" width="16px" height="16px" />
+                    <span>$(mac)</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="vendoSelectDiv" style="margin-bottom: 15px;">
+            <label for="vendoSelected" style="margin-bottom: 5px; font-weight: bold;">Select Vendo</label>
+            <select class="form-control" name="vendoSelected" id="vendoSelected" style="
+                width: 100%; 
+                padding: 10px; 
+                border: none; 
+                border-radius: 10px; 
+                background: linear-gradient(145deg, #ecf0f1, #bdc3c7); 
+                box-shadow: inset 5px 5px 10px #95a5a6, inset -5px -5px 10px #ffffff;
+            ">
+            </select>
+        </div>
+
+        <button type="button" id="insertBtn" onclick="insertBtnAction(); return false" class="action-btn success" data-toggle="modal">INSERT COIN</button>
+        <button type="button" id="promoRateBtn" onclick="promoBtnAction(); return false" class="action-btn warning">PROMO RATES</button>
+        <button type="button" id="memberLoginBtn" class="action-btn" data-toggle="modal" data-target="#memberModal">MEMBER LOGIN</button>
+        
+        <div class="time-options">
+            <div class="time-option" data-duration="30" data-price="0.50" style="opacity: 0.5; pointer-events: none;">
+                <div class="duration">10 MIN</div>
+                <div class="price">₱1</div>
+            </div>
+            <div class="time-option" data-duration="60" data-price="1.00" style="opacity: 0.5; pointer-events: none;">
+                <div class="duration">1 HOUR</div>
+                <div class="price">₱5</div>
+            </div>
+            <div class="time-option" data-duration="180" data-price="2.50" style="opacity: 0.5; pointer-events: none;">
+                <div class="duration">3 HOURS</div>
+                <div class="price">₱10</div>
+            </div>
+            <div class="time-option" data-duration="1440" data-price="5.00" style="opacity: 0.5; pointer-events: none;">
+                <div class="duration">24 HOURS</div>
+                <div class="price">₱20</div>
+            </div>
+        </div>
+
+
+        <div class="form-group" style="margin-top: 20px;">
+            <label for="voucherInput" style="margin-bottom: 10px; font-weight: bold;">VOUCHER</label>
+            <input type="voucher" id="voucherInput" class="form-control" aria-describedby="voucherHelp" placeholder="Enter Voucher Code">
+            <button type="button" id="scanQrBtn" onclick="$('#scanQrModal').modal('show'); return false" class="action-btn" style="display: none">Purchase Via QR</button>
+            <small id="voucherHelp" class="form-text text-muted" style="padding: 5px">Enter voucher code to connect.</small>
+            <button type="button" id="connectBtn" onClick="doLogin(); return false" class="action-btn primary" style="margin-top: 10px;">CONNECT</button>
+        </div>
+        
+        <div class="footer">
+            <span class="footers">
+            Powered by: <a href="https://www.facebook.com/groups/1172413279934139">JuanFi System v4.1</a> &copy; Slave v1<br>
+            </span>				
+        </div>
+
+        <!-- Modals -->
+        <div class="modal fade" id="insertCoinModal" style="z-index: 1500" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="insertCoinModalTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="insertCoinModalTitle">Please insert the coin</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                      <div class="progress" style="margin-bottom: 20px">
+                          <div id="progressDiv" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%; height: 30px"></div>
+                      </div>
+
+                      <div id="noticeDiv" style="display: none">
+                          <center>
+                              <h4 id="noticeText">Reading coin, please wait</h4>
+                          </center>
+                      </div>
+                      
+                      <div class="inscoin">
+                      <center>
+                      <div class="inscoinholder vcCodeHolder" id="vcCodeDiv" >
+                      <span style="color: #747d8c">Your code is</span><br>
+                      <span id="codeGeneratedBlock">
+                          <span id="codeGenerated" style="font-size: 35px; font-weight: bold; color: #4cd137">*****</span>
+                      </span>
+                      </div>
+
+                      <div class="inscoinholder convertVoucherBlock" id="convertVoucherBlockDiv">
+                          <span style="color: #747d8c">Convert unsed voucher</span><br>
+                      <input type="text" class="form-control" id="convertVoucherCode" placeholder="Enter voucher" style="width: 140px; text-align: center; ">
+                      <br>
+                      <button type="button" id="convertBtn" class="btn btn-success" onclick="convertVoucherAction(); return false">Convert</button>
+                      </div>
+                      
+                      <div class="inscoinholder">
+                      <span id="totalCoin" style="font-size: 20px; font-weight: bold; color: #fff">0</span><span style="font-size: 20px; font-weight: bold; color: #fff">.00 Php</span><br>
+                      <span style="color: #747d8c">Coin</span>
+                      </div>
+                      
+                      <div class="inscoinholder" id="totalTimeDiv">
+                      <span id="totalTime" style="font-size: 20px; font-weight: bold; color: #fff"></span><br>
+                      <span style="color: #747d8c">Time: </span>
+                      </div>
+                      
+                      <div class="inscoinholder" id="expectedCoinDiv" style="display: none">
+                      <span id="expectedCoin" style="font-size: 20px; font-weight: bold; color: #fff"></span><br>
+                      <span style="color: #747d8c">Expected Coin </span>
+                      </div>
+                      
+                      </center>
+                      </div>
+                      
+                      
+                      
+                </div>
+                <div class="modal-footer">
+                  <button type="button" id="saveVoucherButton" onclick="saveVoucherBtnAction(); return false" class="btn btn-primary" data-dismiss="modal">
+                    Done
+                  </button>
+                  <button type="button" id="cncl" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="modal fade" id="promoRatesModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel">Promo Rates</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true" style="color: #fff">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <center>
+                      <div id="rateTypeDiv">
+                      <label for="rateType" class="rate-title"><b>Rate Type</b></label>
+                      <select name="rateType" class="form-control" id="rateType" onChange="onRateTypeChange(this)">
+                        <option value="1">Internet</option>
+                      </select>
+                      </div>
+                  </center>
+                  <br/>
+                  <center>	
+                  <div id="ratesBody"></div>
+                  <div id="totalTime"></div>							
+                  </center>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="modal fade" id="scanQrModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+              <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Purchase Voucher using QR Code</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true" style="color: #fff">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                      <center>
+                          <p>Present this QR code to the vendo owner</p>
+                          
+                          <div id="qrcode" class="qrcode-wrapper"></div>
+                          <br/>
+                          <p>Once your request has been approved you will be automatically logged in.</p>
+                      </center>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          
+          <div class="modal fade" id="memberModal" role="dialog" data-backdrop="static" data-keyboard="false">
+              <div class="modal-dialog">
+              <div class="modal-content">
+                  <div class="modal-header">
+                  
+                  <button type="button" class="close" data-dismiss="modal" style="color: #fff">&times;</button><br>        
+      
+                  </div>
+                  <div class="modal-body">
+                  <!-- content -->
+                  <div class="memdiv">
+                  <center>
+                  <!-- title -->
+                  <h4 class="modal-title"><span style="color: #2e86de; text-shadow: 1px 2px 3px #000">Member Login</span></h4>
+                  <form name="login" action="$(link-login-only)" method="post" $(if chap-id) onSubmit="return doLoginMember()" $(endif)>
+                      <input type="hidden" name="dst" value="$(link-orig)" />
+                      <input type="hidden" name="popup" value="true" />
+                      <span style="float: left; color: #a4b0be">Username</span><br>
+                      <input name="username" type="text" value="$(username)" /><br>
+                      <span style="float: left; color: #a4b0be">Password</span><br>
+                      <input name="password" type="password" /><br>
+                      <button class="btn btn-primary" type="submit" value="Connect" style="width: 50%">Login</button>
+                  </form>
+                  </center>
+      
+                  </div>
+      
+                  </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal" style="color: #fff">Close</button>
+              </div>
+              </div>
+      
+              </div>
+          </div>
+
+          <div id="loaderDiv" class="spinner hidden">
+            <center>
+                <img src="assets/loading.svg" />
+            </center>
+        </div>
+
+    </div>
+
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/popper.min.js"></script>
+    <script src="assets/js/bootstrap.min.js"></script>
+    <script src="assets/js/toast.min.js"></script>
+    <script src="assets/js/core.js"></script>
+    <script>
+        var reLogin = getStorageValue('reLogin');
+        var hotspotAddress = "$(server-address)"; 
+        var interfaceName = "$(interface-name)";
+        if(reLogin == '1'){
+            setStorageValue('reLogin', '0');
+            doLogin();
+        }
+    </script>
+    <script>
+        function off() {
+            document.getElementById("overlay").style.display = "none";
+        }
+        
+        var purchaseInfo = "juanfi://purchasevoucher?mac="+mac+"&ip="+uIp;
+        
+        new QRCode(document.getElementById("qrcode"), JSON.stringify(purchaseInfo) );
+    </script>
+
+</body>
+
+</html>
